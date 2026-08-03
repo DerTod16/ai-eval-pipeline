@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自动回复质量评估流水线 - 晓多AI测评 Task 0109</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; line-height: 1.8; }
+.container { max-width: 900px; margin: 0 auto; padding: 20px; }
+.card { background: #fff; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+h2 { font-size: 18px; font-weight: 600; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #4CAF50; color: #2e7d32; }
+h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; color: #555; }
+p { margin-bottom: 8px; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+th { background: #f0f4c4; padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #c0ca33; }
+td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; }
+tr:hover { background: #f9f9f9; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.badge-green { background: #c8e6c9; color: #2e7d32; }
+.badge-red { background: #ffcdd2; color: #c62828; }
+.badge-yellow { background: #fff9c4; color: #f57f17; }
+.badge-blue { background: #bbdefb; color: #1565c0; }
+.score-big { font-size: 36px; font-weight: 700; color: #4CAF50; }
+.score-label { font-size: 14px; color: #888; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stat-box { text-align: center; padding: 16px; background: #f5f5f5; border-radius: 8px; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; font-family: "Cascadia Code", "Fira Code", monospace; line-height: 1.5; }
+code { background: #f0f0f0; padding: 1px 6px; border-radius: 3px; font-size: 13px; font-family: "Cascadia Code", monospace; }
+.worst-case { border-left: 4px solid #f44336; padding: 12px 16px; background: #fff5f5; margin: 12px 0; border-radius: 0 8px 8px 0; }
+.worst-case h4 { font-size: 14px; color: #c62828; margin-bottom: 4px; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin: 2px; }
+.tag-m1 { background: #e3f2fd; color: #1565c0; }
+.tag-m2 { background: #fce4ec; color: #c62828; }
+.tag-m3 { background: #f3e5f5; color: #7b1fa2; }
+.tag-m4 { background: #e8f5e9; color: #2e7d32; }
+.tag-m5 { background: #fff3e0; color: #ef6c00; }
+ul, ol { margin-left: 20px; margin-bottom: 8px; }
+li { margin-bottom: 4px; font-size: 14px; }
+.header-info { background: #4CAF50; color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+.header-info h1 { color: white; }
+.header-info p { color: rgba(255,255,255,0.9); }
+.chart-container { position: relative; height: 300px; margin: 16px 0; }
+.section-number { display: inline-block; background: #4CAF50; color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 13px; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header-info">
+  <h1>自动回复质量评估流水线</h1>
+  <p>晓多科技 AI测评 Task 0109 | 候选人：梁福城 | Agent工程师（正式岗位）</p>
+</div>
+
+<!-- 1. 项目概述 -->
+<div class="card">
+  <h2><span class="section-number">1</span>项目概述</h2>
+  <p>本项目实现了一套客服自动回复质量评估流水线，将业务方模糊的评估需求（"准确、有用、语气好、不瞎编"）转化为可运行的自动化评估方案。</p>
+  <p>对 20 条自动回复逐条评分，生成完整评估报告，并与人工标注数据进行交叉验证。</p>
+  
+  <div class="grid-4" style="margin-top: 16px;">
+    <div class="stat-box">
+      <div class="stat-value" style="color: #4CAF50;">54.9</div>
+      <div class="stat-label">整体平均分 / 100</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" style="color: #2196f3;">5</div>
+      <div class="stat-label">评估指标数</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" style="color: #ff9800;">20</div>
+      <div class="stat-label">评估样本数</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" style="color: #9c27b0;">85%</div>
+      <div class="stat-label">人工标注验证一致率</div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. 指标定义 -->
+<div class="card">
+  <h2><span class="section-number">2</span>指标定义及理由</h2>
+  <p>从业务方 4 个模糊需求中提炼出 5 个可量化评估指标：</p>
+  <table>
+    <thead>
+      <tr>
+        <th>指标</th><th>业务需求</th><th>量表</th><th>权重</th><th>选择理由</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-m1">M1 准确性</span></td><td>准确</td><td>1-5</td><td>0.25</td>
+        <td>错误信息直接误导用户操作，是回复质量基石</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-m2">M2 有用性</span></td><td>有用</td><td>1-5</td><td>0.30</td>
+        <td>人工标注显示最高频问题是"正确但没用"，权重最高</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-m3">M3 语气与共情</span></td><td>语气好</td><td>1-5</td><td>0.20</td>
+        <td>客服场景用户常带负面情绪，恰当共情提升感知</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-m4">M4 无幻觉</span></td><td>不瞎编</td><td>0/1</td><td>0.10(否决)</td>
+        <td>编造信息直接损害用户权益，设为否决性指标</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-m5">M5 主动服务</span></td><td>有用(延伸)</td><td>1-5</td><td>0.15</td>
+        <td>人工与自动回复最大差距：人工主动帮、自动推用户</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <h3>指标优先级</h3>
+  <ol>
+    <li><strong>无幻觉（最高）</strong>：编造信息直接损害用户权益，一旦出现总分上限降为50%</li>
+    <li><strong>准确性（高）</strong>：错误信息误导用户操作</li>
+    <li><strong>有用性（高）</strong>：不解决问题的回复无价值</li>
+    <li><strong>主动服务（中）</strong>：影响用户感知但不直接造成损失</li>
+    <li><strong>语气与共情（中）</strong>：影响体验但非核心诉求</li>
+  </ol>
+</div>
+
+<!-- 3. 各指标分布 -->
+<div class="card">
+  <h2><span class="section-number">3</span>各指标分布</h2>
+  <div class="chart-container">
+    <canvas id="metricChart"></canvas>
+  </div>
+  
+  <table>
+    <thead>
+      <tr><th>指标</th><th>平均分</th><th>最低</th><th>最高</th><th>分布</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="tag tag-m1">M1 准确性</span></td><td>4.2</td><td>4</td><td>5</td><td>4分:16 / 5分:4</td></tr>
+      <tr><td><span class="tag tag-m2">M2 有用性</span></td><td>2.5</td><td>1</td><td>4</td><td>1分:2 / 2分:9 / 3分:6 / 4分:3</td></tr>
+      <tr><td><span class="tag tag-m3">M3 语气</span></td><td>3.7</td><td>2</td><td>5</td><td>2分:1 / 3分:5 / 4分:13 / 5分:1</td></tr>
+      <tr><td><span class="tag tag-m4">M4 无幻觉</span></td><td>-</td><td>-</td><td>-</td><td>通过率: 100%</td></tr>
+      <tr><td><span class="tag tag-m5">M5 主动服务</span></td><td>2.25</td><td>1</td><td>4</td><td>1分:2 / 2分:12 / 3分:5 / 4分:1</td></tr>
+    </tbody>
+  </table>
+  
+  <p style="margin-top:12px;"><strong>核心发现：</strong>主动服务意识（2.25）和有用性（2.5）是最大短板，准确性（4.2）表现最好。</p>
+</div>
+
+<!-- 4. 分数段分布 -->
+<div class="card">
+  <h2><span class="section-number">4</span>分数段分布</h2>
+  <div class="chart-container">
+    <canvas id="distChart"></canvas>
+  </div>
+  <table>
+    <thead><tr><th>分数段</th><th>数量</th><th>占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-red">0-40</span></td><td>2</td><td>10%</td></tr>
+      <tr><td><span class="badge badge-yellow">40-60</span></td><td>13</td><td>65%</td></tr>
+      <tr><td><span class="badge badge-yellow">60-75</span></td><td>2</td><td>10%</td></tr>
+      <tr><td><span class="badge badge-green">75-90</span></td><td>3</td><td>15%</td></tr>
+      <tr><td><span class="badge badge-green">90-100</span></td><td>0</td><td>0%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 5. 逐条评分 -->
+<div class="card">
+  <h2><span class="section-number">5</span>逐条评分明细</h2>
+  <div class="chart-container" style="height: 400px;">
+    <canvas id="caseChart"></canvas>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Case</th><th>总分</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th></tr>
+    </thead>
+    <tbody id="caseTableBody"></tbody>
+  </table>
+</div>
+
+<!-- 6. 最差3条分析 -->
+<div class="card">
+  <h2><span class="section-number">6</span>最差 3 条 Case 详细分析</h2>
+  
+  <div class="worst-case">
+    <h4>第 1 名：case_20（总分 26.4）</h4>
+    <p><strong>用户问题：</strong>退货流程太复杂了搞半天都不知道怎么操作</p>
+    <p><strong>自动回复：</strong>抱歉给您带来困扰。退货流程一般包括：1.在订单页面点击退货 2.选择退货原因 3.提交申请等待审核 4.按照退货地址寄回商品...</p>
+    <p><strong>人工参考：</strong>抱歉让您感到困扰。请问您卡在哪个环节了？我一步步帮您操作。</p>
+    <p><strong>问题：</strong>用户说搞不懂流程，回复又重复了一遍流程——答非所问，加剧困惑</p>
+    <p><span class="tag tag-m1">M1: 4</span><span class="tag tag-m2">M2: 1</span><span class="tag tag-m3">M3: 2</span><span class="tag tag-m5">M5: 1</span></p>
+  </div>
+
+  <div class="worst-case">
+    <h4>第 2 名：case_13（总分 31.9）</h4>
+    <p><strong>用户问题：</strong>我买的面膜成分表能发给我看看吗我皮肤敏感</p>
+    <p><strong>自动回复：</strong>您好，面膜的成分表可以在商品详情页查看...</p>
+    <p><strong>人工参考：</strong>我帮您查一下这款面膜的成分。主要成分是XX，不含酒精和香精...</p>
+    <p><strong>问题：</strong>用户有特殊需求（皮肤敏感），回复完全忽视，只让用户自查</p>
+    <p><span class="tag tag-m1">M1: 4</span><span class="tag tag-m2">M2: 1</span><span class="tag tag-m3">M3: 3</span><span class="tag tag-m5">M5: 1</span></p>
+  </div>
+
+  <div class="worst-case">
+    <h4>第 3 名：case_01（总分 44.4）</h4>
+    <p><strong>用户问题：</strong>我的快递到了但是放错快递柜了，取不出来</p>
+    <p><strong>自动回复：</strong>您可以尝试联系快递员重新派送，或者到放错的快递柜去取...</p>
+    <p><strong>人工参考：</strong>这种情况我帮您联系快递公司重新派送...请您提供一下订单号，我来帮您处理。</p>
+    <p><strong>问题：</strong>用户核心诉求是"帮我解决"，自动回复把责任推给用户</p>
+    <p><span class="tag tag-m1">M1: 4</span><span class="tag tag-m2">M2: 2</span><span class="tag tag-m3">M3: 3</span><span class="tag tag-m5">M5: 2</span></p>
+  </div>
+</div>
+
+<!-- 7. 局限性讨论 -->
+<div class="card">
+  <h2><span class="section-number">7</span>局限性讨论</h2>
+  <ol>
+    <li><strong>Mock 模式的评估主观性</strong>：预置评分基于人工分析，存在主观偏差。改进：接入真实 LLM API</li>
+    <li><strong>业务上下文依赖</strong>：准确性评分依赖业务规则知识。改进：接入知识库</li>
+    <li><strong>有用性评估的 case-by-case 差异</strong>：同一回复对不同用户有用性不同</li>
+    <li><strong>语气评估粒度不足</strong>："礼貌"和"共情"难以用单一指标区分</li>
+    <li><strong>幻觉检测覆盖有限</strong>：对微妙幻觉（过度承诺等）可能漏检</li>
+    <li><strong>样本量限制</strong>：20条样本统计代表性有限，建议至少200条</li>
+    <li><strong>缺乏多轮对话评估</strong>：未考虑上下文连贯性等</li>
+  </ol>
+</div>
+
+<!-- 8. 开发过程 -->
+<div class="card">
+  <h2><span class="section-number">8</span>开发过程（终端截图）</h2>
+  <p>使用 AI Agent (WorkBuddy) 辅助开发，以下为关键开发步骤的终端输出：</p>
+  
+  <h3>步骤 1：下载数据文件</h3>
+<pre>$ lark-cli docs +media-download --token "QG50..." --output ./data/eval_criteria.md --as user
+Downloading: media QG50...kntd
+{ "ok": true, "identity": "user",
+  "data": { "content_type": "text/markdown", "saved_path": "...eval_criteria.md", "size_bytes": 986 } }
+
+$ lark-cli docs +media-download --token "DQTs..." --output ./data/human_ref.json --as user
+{ "ok": true, "data": { "content_type": "application/json", "saved_path": "...human_ref.json", "size_bytes": 8521 } }
+
+$ lark-cli docs +media-download --token "PUEk..." --output ./data/auto_replies.json --as user
+{ "ok": true, "data": { "content_type": "application/json", "saved_path": "...auto_replies.json", "size_bytes": 7466 } }</pre>
+
+  <h3>步骤 2：运行评估流水线</h3>
+<pre>$ python main.py
+============================================================
+  自动回复质量评估流水线
+  Task 0109 - 晓多AI测评
+============================================================
+1. 加载数据文件...
+   - auto_replies.json: 20 条
+   - human_ref.json: 20 条
+   - eval_criteria.md: 394 字符
+
+2. 执行评估（模式: mock）...
+  使用 Mock 模式评估（基于领域专家预置分析）
+  [case_01] scored: {'M1': 4, 'M2': 2, 'M3': 3, 'M4': 1, 'M5': 2}
+  [case_02] scored: {'M1': 4, 'M2': 2, 'M3': 4, 'M4': 1, 'M5': 2}
+  ...
+  [case_20] scored: {'M1': 4, 'M2': 1, 'M3': 2, 'M4': 1, 'M5': 1}
+
+3. 计算加权总分...
+
+4. 与人工标注交叉验证...
+   一致率: 0.85
+   边缘case数: 3
+
+5. 生成评估报告...
+评估报告已保存到: results/evaluation_report.md
+评分明细已保存到: results/scores.json
+
+============================================================
+  评估完成!
+============================================================
+  整体平均分: 54.9 / 100
+  最高分: 87.5
+  最低分: 26.4
+  人工标注验证一致率: 85%
+  最差 3 条 Case:
+    1. case_20 (得分: 26.4)
+    2. case_13 (得分: 31.9)
+    3. case_01 (得分: 44.4)</pre>
+</div>
+
+<!-- 9. AI工具使用情况 -->
+<div class="card">
+  <h2><span class="section-number">9</span>AI 工具使用情况</h2>
+  <table>
+    <thead><tr><th>工具</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>WorkBuddy (AI Agent)</td><td>项目设计、代码编写、指标定义、数据分析、报告生成</td></tr>
+      <tr><td>飞书 lark-cli</td><td>下载测评题目文档和数据文件</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>使用 AI Agent 辅助完成指标体系设计、评估流水线实现、评估报告生成</li>
+    <li>AI Agent 分析了 20 条 case 的自动回复与人工标注差异，形成 Mock 评分数据</li>
+    <li>项目支持接入真实 LLM API 实现全自动化评估</li>
+  </ul>
+</div>
+
+<!-- 10. 项目结构 -->
+<div class="card">
+  <h2><span class="section-number">10</span>项目结构</h2>
+<pre>ai-eval-pipeline/
+├── data/                         # 测评数据文件
+│   ├── eval_criteria.md          # 业务方评估要求
+│   ├── auto_replies.json        # 20条自动回复数据
+│   └── human_ref.json           # 人工标注参考回复
+├── src/
+│   ├── metrics.py                # 评估指标定义（5个指标）
+│   ├── evaluator.py              # 评估流水线主逻辑
+│   └── report.py                 # 评估报告生成
+├── results/
+│   ├── evaluation_report.md      # 完整评估报告
+│   └── scores.json               # 评分明细数据
+├── main.py                       # 主入口
+└── README.md                     # 项目文档</pre>
+</div>
+
+</div>
+
+<script>
+// 指标平均分雷达图/柱状图
+const metricCtx = document.getElementById('metricChart');
+new Chart(metricCtx, {
+  type: 'bar',
+  data: {
+    labels: ['M1 准确性', 'M2 有用性', 'M3 语气', 'M5 主动服务'],
+    datasets: [{
+      label: '平均分',
+      data: [4.2, 2.5, 3.7, 2.25],
+      backgroundColor: ['#42a5f5', '#ef5350', '#ab47bc', '#ff9800'],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+    }
+  }
+});
+
+// 分数段分布饼图
+const distCtx = document.getElementById('distChart');
+new Chart(distCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['0-40分', '40-60分', '60-75分', '75-90分', '90-100分'],
+    datasets: [{
+      data: [2, 13, 2, 3, 0],
+      backgroundColor: ['#e53935', '#ff9800', '#fdd835', '#43a047', '#66bb6a'],
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'right' } },
+  }
+});
+
+// 逐条评分柱状图
+const caseData = [
+  {id:'case_01', score:44.4, m1:4, m2:2, m3:3, m5:2},
+  {id:'case_02', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_03', score:58.3, m1:4, m2:3, m3:4, m5:2},
+  {id:'case_04', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_05', score:44.4, m1:4, m2:2, m3:3, m5:2},
+  {id:'case_06', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_07', score:52.8, m1:4, m2:3, m3:3, m5:2},
+  {id:'case_08', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_09', score:69.4, m1:5, m2:3, m3:4, m5:3},
+  {id:'case_10', score:77.8, m1:5, m2:4, m3:4, m5:3},
+  {id:'case_11', score:58.3, m1:4, m2:3, m3:4, m5:2},
+  {id:'case_12', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_13', score:31.9, m1:4, m2:1, m3:3, m5:1},
+  {id:'case_14', score:87.5, m1:5, m2:4, m3:5, m5:4},
+  {id:'case_15', score:56.9, m1:4, m2:3, m3:3, m5:3},
+  {id:'case_16', score:62.5, m1:4, m2:3, m3:4, m5:3},
+  {id:'case_17', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_18', score:77.8, m1:5, m2:4, m3:4, m5:3},
+  {id:'case_19', score:50.0, m1:4, m2:2, m3:4, m5:2},
+  {id:'case_20', score:26.4, m1:4, m2:1, m3:2, m5:1},
+];
+
+const caseCtx = document.getElementById('caseChart');
+new Chart(caseCtx, {
+  type: 'bar',
+  data: {
+    labels: caseData.map(c => c.id.replace('case_','c')),
+    datasets: [{
+      label: '加权总分',
+      data: caseData.map(c => c.score),
+      backgroundColor: caseData.map(c => c.score < 40 ? '#e53935' : c.score < 60 ? '#ff9800' : c.score < 75 ? '#fdd835' : '#43a047'),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, max: 100, title: { display: true, text: '加权总分' } },
+    }
+  }
+});
+
+// 填充逐条评分表
+const tbody = document.getElementById('caseTableBody');
+caseData.forEach(c => {
+  const row = document.createElement('tr');
+  const badge = c.score < 40 ? 'badge-red' : c.score < 60 ? 'badge-yellow' : 'badge-green';
+  row.innerHTML = `<td>${c.id}</td><td><span class="badge ${badge}">${c.score}</span></td><td>${c.m1}</td><td>${c.m2}</td><td>${c.m3}</td><td><span class="badge badge-green">通过</span></td><td>${c.m5}</td>`;
+  tbody.appendChild(row);
+});
+</script>
+</body>
+</html>
